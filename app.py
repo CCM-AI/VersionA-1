@@ -43,15 +43,16 @@ def ai_assistant_response(query, results):
 
     return response
 
+# Initialize session state to store results
+if 'results' not in st.session_state:
+    st.session_state['results'] = {}
+
 # Streamlit App Layout
 st.title("Comprehensive Multi-Condition Risk Stratification, Care Plan, and AI Assistant")
 st.write("This app assesses risk for chronic conditions, provides a unified care plan for multiple conditions, and includes an AI assistant for personalized queries.")
 
 # Define tabs for each condition and the AI Assistant
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Cardiovascular Risk", "Diabetes Risk", "COPD Risk", "Asthma Risk", "Unified Care Plan", "AI Assistant"])
-
-# Dictionary to store risk levels for each condition
-results = {}
 
 # Cardiovascular Risk Tab
 with tab1:
@@ -64,7 +65,7 @@ with tab1:
     if st.button("Calculate Cardiovascular Risk"):
         cardio_risk = calculate_cardio_risk(age, systolic_bp, smoker == "Current smoker", cholesterol)
         st.write(f"**Cardiovascular Risk Level**: {cardio_risk}")
-        results["Cardiovascular"] = cardio_risk
+        st.session_state['results']["Cardiovascular"] = cardio_risk
 
 # Diabetes Risk Tab
 with tab2:
@@ -76,7 +77,7 @@ with tab2:
     if st.button("Calculate Diabetes Risk"):
         diabetes_risk = calculate_diabetes_risk(bmi, age, family_history == "Yes", fasting_glucose)
         st.write(f"**Diabetes Risk Level**: {diabetes_risk}")
-        results["Diabetes"] = diabetes_risk
+        st.session_state['results']["Diabetes"] = diabetes_risk
 
 # COPD Risk Tab
 with tab3:
@@ -87,7 +88,7 @@ with tab3:
     if st.button("Calculate COPD Risk"):
         copd_risk = calculate_copd_risk(smoking_years, age, fev1_copd)
         st.write(f"**COPD Risk Level**: {copd_risk}")
-        results["COPD"] = copd_risk
+        st.session_state['results']["COPD"] = copd_risk
 
 # Asthma Risk Tab
 with tab4:
@@ -100,55 +101,37 @@ with tab4:
     if st.button("Calculate Asthma Risk"):
         asthma_risk = calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use, fev1_asthma)
         st.write(f"**Asthma Risk Level**: {asthma_risk}")
-        results["Asthma"] = asthma_risk
+        st.session_state['results']["Asthma"] = asthma_risk
 
 # Unified Care Plan Tab
 with tab5:
     st.header("Unified Care Plan for Multi-Condition Management")
 
-    high_risk_conditions = [condition for condition, risk in results.items() if risk == "High"]
-    moderate_risk_conditions = [condition for condition, risk in results.items() if risk == "Moderate"]
-
-    # Display integrated care recommendations if multiple high or moderate risks are present
-    if high_risk_conditions or moderate_risk_conditions:
-        st.write("### Combined Risk Conditions:")
-        st.write("#### High-Risk Conditions:")
-        for condition in high_risk_conditions:
-            st.write(f"- **{condition}**")
-
-        st.write("#### Moderate-Risk Conditions:")
-        for condition in moderate_risk_conditions:
-            st.write(f"- **{condition}**")
-
-        # Combined care recommendations based on multiple conditions
-        st.subheader("Integrated Care Recommendations")
-        st.write("- **Self-Management Support**: Follow condition-specific lifestyle modifications, such as the DASH diet for cardiovascular health and carbohydrate control for diabetes, ensuring medication adherence across all conditions.")
-        
-        # Monitoring Plan
-        st.subheader("Monitoring Plan")
-        st.write("- **Daily Monitoring**: For cardiovascular and diabetes risks, check blood pressure and/or blood glucose.")
-        st.write("   - COPD or asthma high-risk patients should track peak flow and FEV1 values.")
-
-        # Follow-Up Plan
-        st.subheader("Follow-Up Plan")
-        st.write("- **Monthly Follow-Up**: For high-risk conditions, coordinate monthly check-ins for multiple conditions to streamline care.")
-        st.write("- **Quarterly Follow-Up**: Moderate-risk conditions should have at least quarterly check-ins.")
-        
-        # Outcome Evaluation Plan
-        st.subheader("Outcome Evaluation Plan")
-        st.write("- **Quarterly**: Reevaluate to ensure management effectiveness across conditions.")
-        st.write("- **Biannual**: Comprehensive review and update the care plan as needed.")
-
-    else:
-        st.success("No high-risk or moderate-risk conditions identified. Continue with preventive care.")
+    # Display individual care plan for each condition with specific recommendations based on risk
+    for condition, risk in st.session_state['results'].items():
+        st.subheader(f"{condition} Care Plan (Risk Level: {risk})")
+        if risk == "High":
+            st.write(f"- **{condition}**: High-risk patients require aggressive intervention, close monitoring, and regular follow-up. Recommended steps include:")
+            st.write("  - Frequent monitoring (daily or weekly)")
+            st.write("  - Strict adherence to medications and lifestyle changes.")
+            st.write("  - Monthly specialist consultations.")
+        elif risk == "Moderate":
+            st.write(f"- **{condition}**: Moderate-risk patients should follow a comprehensive management plan with regular monitoring and preventive measures:")
+            st.write("  - Weekly to biweekly monitoring.")
+            st.write("  - Consistent lifestyle adjustments (diet, exercise).")
+            st.write("  - Quarterly primary care consultations.")
+        else:
+            st.write(f"- **{condition}**: Low-risk patients can maintain preventive measures to avoid escalation.")
+            st.write("  - Annual health reviews.")
+            st.write("  - Routine healthy lifestyle maintenance.")
 
 # AI Assistant Tab
 with tab6:
     st.header("AI Assistant for Healthcare Provider Guidance")
     query = st.text_input("Ask the AI Assistant about risk stratification, follow-up, monitoring, or self-management:")
     if st.button("Get AI Assistance"):
-        if results:
-            ai_response = ai_assistant_response(query, results)
+        if st.session_state['results']:
+            ai_response = ai_assistant_response(query, st.session_state['results'])
             st.write(ai_response)
         else:
             st.write("Please complete risk assessments in previous tabs first.")
