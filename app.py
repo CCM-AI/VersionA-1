@@ -1,21 +1,21 @@
 import streamlit as st
 from datetime import datetime
 
-# Placeholder functions for risk algorithms
+# Placeholder functions for risk algorithms (using general guidelines for stratification)
 def calculate_cardio_risk(age, systolic_bp, smoker, cholesterol):
     risk_score = (age * 0.1) + (systolic_bp * 0.05) + (10 if smoker else 0) + (cholesterol * 0.02)
     return "High" if risk_score > 15 else "Moderate" if risk_score > 10 else "Low"
 
-def calculate_diabetes_risk(bmi, age, family_history, fasting_glucose):
-    risk_score = (bmi * 0.3) + (age * 0.1) + (10 if family_history else 0) + (fasting_glucose * 0.02)
+def calculate_diabetes_risk(bmi, age, family_history, fasting_glucose, hba1c):
+    risk_score = (bmi * 0.3) + (age * 0.1) + (10 if family_history else 0) + (fasting_glucose * 0.02) + (hba1c * 0.1)
     return "High" if risk_score > 20 else "Moderate" if risk_score > 15 else "Low"
 
-def calculate_copd_risk(smoking_years, age, fev1):
-    risk_score = (smoking_years * 0.5) + (age * 0.2) - (fev1 * 0.1)
+def calculate_copd_risk(smoking_years, age, fev1, exacerbations_last_year):
+    risk_score = (smoking_years * 0.5) + (age * 0.2) - (fev1 * 0.1) + (exacerbations_last_year * 5)
     return "High" if risk_score > 25 else "Moderate" if risk_score > 15 else "Low"
 
-def calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use, fev1):
-    risk_score = (frequency_of_symptoms * 2) + (nighttime_symptoms * 3) + (inhaler_use * 1.5) - (fev1 * 0.1)
+def calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use, fev1, eosinophil_count):
+    risk_score = (frequency_of_symptoms * 2) + (nighttime_symptoms * 3) + (inhaler_use * 1.5) - (fev1 * 0.1) + (eosinophil_count * 0.2)
     return "High" if risk_score > 20 else "Moderate" if risk_score > 10 else "Low"
 
 # AI Assistant Response with Objective References
@@ -25,21 +25,43 @@ def ai_assistant_response(query, results):
     moderate_risk_conditions = [condition for condition, risk in results.items() if risk == "Moderate"]
 
     if "follow-up" in query.lower():
-        response += "For high-risk cases, monthly check-ins are advised. Moderate-risk cases may require quarterly check-ups. "
-        response += "Refer to American Heart Association and American Diabetes Association guidelines for specific recommendations."
+        response += "For high-risk cases, guidelines recommend close monitoring and follow-ups as per condition:\n"
+        if "Cardiovascular" in results:
+            response += "- **Cardiovascular**: Monthly blood pressure checks and bi-annual lipid profiles. Consider frequent ECGs for high-risk patients.\n"
+        if "Diabetes" in results:
+            response += "- **Diabetes**: Quarterly HbA1c checks and monthly blood glucose monitoring. Emphasize diabetic foot exams.\n"
+        if "COPD" in results:
+            response += "- **COPD**: Regular spirometry every 3-6 months and biannual respiratory checkups. High-risk patients may benefit from pulmonary rehab.\n"
+        if "Asthma" in results:
+            response += "- **Asthma**: Spirometry every 6 months and close follow-up for medication adherence and asthma action plan updates.\n"
+        response += "Refer to respective guidelines (e.g., AHA, ADA) for specific protocols."
 
     elif "monitoring" in query.lower():
-        response += "For monitoring, high-risk conditions need daily self-checks. For cardiovascular risks, measure blood pressure daily; "
+        response += "Monitoring protocols by condition:\n"
+        if "Cardiovascular" in results:
+            response += "- **Cardiovascular**: Daily BP logging, weekly weight checks. For high-risk, lipid panels every 3 months.\n"
         if "Diabetes" in results:
-            response += "high-risk diabetes patients should monitor fasting glucose daily. "
-        response += "Review monitoring protocols per guidelines by the American College of Physicians."
+            response += "- **Diabetes**: Daily glucose monitoring, quarterly HbA1c. Routine kidney and eye exams yearly.\n"
+        if "COPD" in results:
+            response += "- **COPD**: Track symptoms daily, spirometry every 3-6 months, and monitor oxygen saturation if needed.\n"
+        if "Asthma" in results:
+            response += "- **Asthma**: Peak flow monitoring daily for high-risk, symptom diary, and annual allergen testing.\n"
+        response += "Monitoring should adhere to standards set by leading health organizations."
 
     elif "self-management" in query.lower():
-        response += "Patients should follow self-management practices such as the DASH diet for cardiovascular health or carbohydrate counting for diabetes. "
-        response += "Adherence to medications and physical activity routines is essential across conditions."
+        response += "Encourage self-management:\n"
+        if "Cardiovascular" in results:
+            response += "- **Cardiovascular**: Promote DASH diet, 30 min daily exercise, and stress reduction. Smoking cessation is critical.\n"
+        if "Diabetes" in results:
+            response += "- **Diabetes**: Carbohydrate counting, regular meal planning, and physical activity (150 min/week).\n"
+        if "COPD" in results:
+            response += "- **COPD**: Smoking cessation, breathing exercises, and pulmonary rehab.\n"
+        if "Asthma" in results:
+            response += "- **Asthma**: Action plan adherence, allergen avoidance, and inhaler technique training.\n"
+        response += "Tailor recommendations per American Diabetes Association, NIH, and CDC guidelines."
 
     else:
-        response += "I'm here to assist with questions on risk stratification, monitoring, self-management, and follow-up plans for chronic conditions."
+        response += "I'm here to assist with evidence-based follow-up, monitoring, and self-management protocols. Please ask about specific condition management."
 
     return response
 
@@ -73,9 +95,10 @@ with tab2:
     bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=22.0)
     family_history = st.radio("Family History of Diabetes", options=["Yes", "No"])
     fasting_glucose = st.number_input("Fasting Glucose (mg/dL)", min_value=50, max_value=300, value=90)
+    hba1c = st.number_input("HbA1c (%)", min_value=4.0, max_value=15.0, value=5.6)
 
     if st.button("Calculate Diabetes Risk"):
-        diabetes_risk = calculate_diabetes_risk(bmi, age, family_history == "Yes", fasting_glucose)
+        diabetes_risk = calculate_diabetes_risk(bmi, age, family_history == "Yes", fasting_glucose, hba1c)
         st.write(f"**Diabetes Risk Level**: {diabetes_risk}")
         st.session_state['results']["Diabetes"] = diabetes_risk
 
@@ -84,9 +107,10 @@ with tab3:
     st.header("COPD Risk Assessment")
     smoking_years = st.number_input("Years of Smoking (if applicable)", min_value=0, max_value=60, value=0)
     fev1_copd = st.number_input("FEV1 (%) - COPD", min_value=20, max_value=100, value=80)
+    exacerbations_last_year = st.number_input("Number of COPD Exacerbations in Last Year", min_value=0, max_value=10, value=0)
 
     if st.button("Calculate COPD Risk"):
-        copd_risk = calculate_copd_risk(smoking_years, age, fev1_copd)
+        copd_risk = calculate_copd_risk(smoking_years, age, fev1_copd, exacerbations_last_year)
         st.write(f"**COPD Risk Level**: {copd_risk}")
         st.session_state['results']["COPD"] = copd_risk
 
@@ -97,9 +121,10 @@ with tab4:
     nighttime_symptoms = st.slider("Nighttime Symptoms (days per week)", 0, 7, 1)
     inhaler_use = st.slider("Inhaler Use (days per week)", 0, 7, 2)
     fev1_asthma = st.number_input("FEV1 (%) - Asthma", min_value=20, max_value=100, value=80)
+    eosinophil_count = st.number_input("Eosinophil Count (cells/μL)", min_value=0, max_value=1500, value=300)
 
     if st.button("Calculate Asthma Risk"):
-        asthma_risk = calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use, fev1_asthma)
+        asthma_risk = calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use, fev1_asthma, eosinophil_count)
         st.write(f"**Asthma Risk Level**: {asthma_risk}")
         st.session_state['results']["Asthma"] = asthma_risk
 
