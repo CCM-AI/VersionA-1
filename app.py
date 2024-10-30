@@ -1,5 +1,4 @@
 import streamlit as st
-from datetime import datetime
 
 # Placeholder functions for risk algorithms (using general guidelines for stratification)
 def calculate_cardio_risk(age, systolic_bp, smoker, cholesterol):
@@ -18,50 +17,29 @@ def calculate_asthma_risk(frequency_of_symptoms, nighttime_symptoms, inhaler_use
     risk_score = (frequency_of_symptoms * 2) + (nighttime_symptoms * 3) + (inhaler_use * 1.5) - (fev1 * 0.1) + (eosinophil_count * 0.2)
     return "High" if risk_score > 20 else "Moderate" if risk_score > 10 else "Low"
 
-# AI Assistant Response with Objective References
+# Enhanced AI Assistant response with MDT support and references
 def ai_assistant_response(query, results):
     response = ""
     high_risk_conditions = [condition for condition, risk in results.items() if risk == "High"]
     moderate_risk_conditions = [condition for condition, risk in results.items() if risk == "Moderate"]
 
-    if "follow-up" in query.lower():
-        response += "For high-risk cases, guidelines recommend close monitoring and follow-ups as per condition:\n"
-        if "Cardiovascular" in results:
-            response += "- **Cardiovascular**: Monthly blood pressure checks and bi-annual lipid profiles. Consider frequent ECGs for high-risk patients.\n"
-        if "Diabetes" in results:
-            response += "- **Diabetes**: Quarterly HbA1c checks and monthly blood glucose monitoring. Emphasize diabetic foot exams.\n"
-        if "COPD" in results:
-            response += "- **COPD**: Regular spirometry every 3-6 months and biannual respiratory checkups. High-risk patients may benefit from pulmonary rehab.\n"
-        if "Asthma" in results:
-            response += "- **Asthma**: Spirometry every 6 months and close follow-up for medication adherence and asthma action plan updates.\n"
-        response += "Refer to respective guidelines (e.g., AHA, ADA) for specific protocols."
+    if high_risk_conditions or moderate_risk_conditions:
+        response += "Here’s a detailed, multidisciplinary care plan based on current evidence:\n\n"
 
-    elif "monitoring" in query.lower():
-        response += "Monitoring protocols by condition:\n"
-        if "Cardiovascular" in results:
-            response += "- **Cardiovascular**: Daily BP logging, weekly weight checks. For high-risk, lipid panels every 3 months.\n"
-        if "Diabetes" in results:
-            response += "- **Diabetes**: Daily glucose monitoring, quarterly HbA1c. Routine kidney and eye exams yearly.\n"
-        if "COPD" in results:
-            response += "- **COPD**: Track symptoms daily, spirometry every 3-6 months, and monitor oxygen saturation if needed.\n"
-        if "Asthma" in results:
-            response += "- **Asthma**: Peak flow monitoring daily for high-risk, symptom diary, and annual allergen testing.\n"
-        response += "Monitoring should adhere to standards set by leading health organizations."
-
-    elif "self-management" in query.lower():
-        response += "Encourage self-management:\n"
-        if "Cardiovascular" in results:
-            response += "- **Cardiovascular**: Promote DASH diet, 30 min daily exercise, and stress reduction. Smoking cessation is critical.\n"
-        if "Diabetes" in results:
-            response += "- **Diabetes**: Carbohydrate counting, regular meal planning, and physical activity (150 min/week).\n"
-        if "COPD" in results:
-            response += "- **COPD**: Smoking cessation, breathing exercises, and pulmonary rehab.\n"
-        if "Asthma" in results:
-            response += "- **Asthma**: Action plan adherence, allergen avoidance, and inhaler technique training.\n"
-        response += "Tailor recommendations per American Diabetes Association, NIH, and CDC guidelines."
-
-    else:
-        response += "I'm here to assist with evidence-based follow-up, monitoring, and self-management protocols. Please ask about specific condition management."
+        for condition, risk in results.items():
+            if risk == "High":
+                response += f"**{condition} (High Risk):**\n"
+                response += "- **Primary Care Physician**: Immediate review of medication, adjust therapy, and consider frequent specialist referrals.\n"
+                response += "- **Nurse**: Weekly patient check-ins to monitor adherence and symptoms.\n"
+                response += "- **Dietitian**: Design a personalized nutrition plan that supports condition management.\n"
+                response += "- **Respiratory Therapist** (if COPD or Asthma): Implement pulmonary rehabilitation, monitor inhaler techniques.\n\n"
+            elif risk == "Moderate":
+                response += f"**{condition} (Moderate Risk):**\n"
+                response += "- **Primary Care Physician**: Monthly reviews of patient status and lifestyle modifications.\n"
+                response += "- **Nurse**: Educate on symptom tracking, quarterly visits to reinforce care plan.\n"
+                response += "- **Dietitian**: Provide guidance on diet changes that support cardiovascular and metabolic health.\n\n"
+        
+        response += "\nPlease consult specific guidelines (e.g., ADA, AHA) for detailed recommendations."
 
     return response
 
@@ -130,30 +108,34 @@ with tab4:
 
 # Unified Care Plan Tab
 with tab5:
-    st.header("Unified Care Plan for Multi-Condition Management")
+    st.header("Unified Care Plan for Multi-Condition Management (Based on CCM)")
 
-    # Display individual care plan for each condition with specific recommendations based on risk
+    # Display condition-specific, evidence-based recommendations using the Chronic Care Model
     for condition, risk in st.session_state['results'].items():
         st.subheader(f"{condition} Care Plan (Risk Level: {risk})")
         if risk == "High":
-            st.write(f"- **{condition}**: High-risk patients require aggressive intervention, close monitoring, and regular follow-up. Recommended steps include:")
-            st.write("  - Frequent monitoring (daily or weekly)")
-            st.write("  - Strict adherence to medications and lifestyle changes.")
-            st.write("  - Monthly specialist consultations.")
+            st.write(f"- **{condition} - High Risk**: A comprehensive care plan based on the Chronic Care Model includes:")
+            st.write("  - **Self-Management Support**: Patient education, training on symptom tracking, and emergency action planning.")
+            st.write("  - **Decision Support**: Frequent specialist consultation and adherence to clinical guidelines for high-risk management.")
+            st.write("  - **Delivery System Design**: Monthly follow-ups, medication review, and adjustments. Implement care coordination across providers.")
+            st.write("  - **Community Resources**: Referral to support groups and home care services if required.")
         elif risk == "Moderate":
-            st.write(f"- **{condition}**: Moderate-risk patients should follow a comprehensive management plan with regular monitoring and preventive measures:")
-            st.write("  - Weekly to biweekly monitoring.")
-            st.write("  - Consistent lifestyle adjustments (diet, exercise).")
-            st.write("  - Quarterly primary care consultations.")
+            st.write(f"- **{condition} - Moderate Risk**: Intermediate care plan with CCM recommendations:")
+            st.write("  - **Self-Management Support**: Encourage lifestyle changes, provide tools for tracking symptoms, and set achievable health goals.")
+            st.write("  - **Decision Support**: Schedule quarterly check-ups with a focus on preventive care.")
+            st.write("  - **Delivery System Design**: Semi-annual follow-up visits, proactive medication adjustments, and referral as needed.")
+            st.write("  - **Community Resources**: Connect with local health education resources.")
         else:
-            st.write(f"- **{condition}**: Low-risk patients can maintain preventive measures to avoid escalation.")
-            st.write("  - Annual health reviews.")
-            st.write("  - Routine healthy lifestyle maintenance.")
+            st.write(f"- **{condition} - Low Risk**: Preventive and maintenance plan based on CCM recommendations.")
+            st.write("  - **Self-Management Support**: Encourage regular health checks and adherence to preventive lifestyle practices.")
+            st.write("  - **Decision Support**: Annual review of patient health status.")
+            st.write("  - **Delivery System Design**: Ensure primary care check-ups annually or biannually.")
+            st.write("  - **Community Resources**: Provide information on health maintenance resources.")
 
 # AI Assistant Tab
 with tab6:
-    st.header("AI Assistant for Healthcare Provider Guidance")
-    query = st.text_input("Ask the AI Assistant about risk stratification, follow-up, monitoring, or self-management:")
+    st.header("AI Assistant (Multidisciplinary Team) for Healthcare Provider Guidance")
+    query = st.text_input("Ask the AI Assistant about risk management, personalized care, or guidelines:")
     if st.button("Get AI Assistance"):
         if st.session_state['results']:
             ai_response = ai_assistant_response(query, st.session_state['results'])
